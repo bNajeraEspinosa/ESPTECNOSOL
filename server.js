@@ -1,20 +1,21 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Conectar a SQLite y crear archivo si no existe
-const dbPath = './db/sensores.db';
+// Crear carpeta db si no existe
 if (!fs.existsSync('./db')) {
   fs.mkdirSync('./db');
 }
-const db = new sqlite3.Database(dbPath);
 
-// Verificar o crear tabla 'lecturas'
-db.run(`
+// Conectar a la base de datos
+const db = new Database('./db/sensores.db');
+
+// Crear tabla si no existe
+db.prepare(`
   CREATE TABLE IF NOT EXISTS lecturas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     sensor_id INTEGER,
@@ -22,13 +23,7 @@ db.run(`
     temp REAL,
     fecha TEXT
   )
-`, (err) => {
-  if (err) {
-    console.error("Error al crear/verificar tabla:", err.message);
-  } else {
-    console.log("Tabla 'lecturas' verificada");
-  }
-});
+`).run();
 
 // Configurar EJS y archivos estáticos
 app.set('view engine', 'ejs');
@@ -36,25 +31,21 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Página principal (tabla de lecturas)
+// Página principal
 app.get('/', (req, res) => {
-  db.all('SELECT * FROM lecturas ORDER BY id DESC LIMIT 100', [], (err, rows) => {
-    if (err) {
-      console.error(" Error al consultar lecturas:", err.message);
-      return res.status(500).send("Error al consultar la base de datos.");
-    }
+  try {
+    const rows = db.prepare('SELECT * FROM lecturas ORDER BY id DESC LIMIT 100').all();
     res.render('index', { lecturas: rows });
-  });
+  } catch (err) {
+    console.error("❌ Error al cargar lecturas:", err.message);
+    res.status(500).send("Error al consultar la base de datos.");
+  }
 });
 
-// Ruta para exportar lecturas a CSV
+// Exportar a CSV
 app.get('/export', (req, res) => {
-  db.all('SELECT * FROM lecturas ORDER BY id', [], (err, rows) => {
-    if (err) {
-      console.error(" Error al exportar CSV:", err.message);
-      return res.status(500).send("Error al exportar datos.");
-    }
-
+  try {
+    const rows = db.prepare('SELECT * FROM lecturas ORDER BY id').all();
     const csv = ['ID,Sensor,Humedad,Temperatura,Fecha/Hora'];
     rows.forEach(r => {
       csv.push(`${r.id},${r.sensor_id},${r.humedad},${r.temp},${r.fecha}`);
@@ -63,17 +54,20 @@ app.get('/export', (req, res) => {
     res.header('Content-Type', 'text/csv');
     res.attachment('lecturas.csv');
     res.send(csv.join('\n'));
-  });
+  } catch (err) {
+    console.error("❌ Error al exportar CSV:", err.message);
+    res.status(500).send("Error al exportar datos.");
+  }
 });
 
-// API para autorefrescar tabla con JS
+// API (lecturas recientes)
 app.get('/api/lecturas', (req, res) => {
-  db.all('SELECT * FROM lecturas ORDER BY id DESC LIMIT 100', [], (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: "Error al obtener lecturas" });
-    }
+  try {
+    const rows = db.prepare('SELECT * FROM lecturas ORDER BY id DESC LIMIT 100').all();
     res.json(rows);
-  });
+  } catch (err) {
+    res.status(500).json({ error: "Error al obtener lecturas" });
+  }
 });
 
 // Ruta POST desde ESP32
@@ -84,19 +78,18 @@ app.post('/api/sensores', (req, res) => {
     return res.status(400).json({ error: "Faltan datos" });
   }
 
-  const query = `INSERT INTO lecturas (sensor_id, humedad, temp, fecha) VALUES (?, ?, ?, ?)`;
-  db.run(query, [sensor_id, humedad, temp, fecha], function (err) {
-    if (err) {
-      console.error(" Error al guardar datos:", err.message);
-      return res.status(500).json({ error: "Error al guardar datos" });
-    }
-
-    console.log(`Lectura guardada con ID: ${this.lastID}`);
-    res.json({ message: "Datos guardados", id: this.lastID });
-  });
+  try {
+    const stmt = db.prepare('INSERT INTO lecturas (sensor_id, humedad, temp, fecha) VALUES (?, ?, ?, ?)');
+    const result = stmt.run(sensor_id, humedad, temp, fecha);
+    console.log(`✅ Lectura guardada con ID: ${result.lastInsertRowid}`);
+    res.json({ message: "Datos guardados", id: result.lastInsertRowid });
+  } catch (err) {
+    console.error("❌ Error al guardar datos:", err.message);
+    res.status(500).json({ error: "Error al guardar datos" });
+  }
 });
 
-//busqueda por histórico
+// Histórico con filtros
 app.get('/historico', (req, res) => {
   const { fecha, sensor_id } = req.query;
 
@@ -115,19 +108,17 @@ app.get('/historico', (req, res) => {
 
   query += ' ORDER BY fecha DESC';
 
-  db.all(query, params, (err, rows) => {
-    if (err) {
-      console.error(" Error al consultar historial:", err.message);
-      return res.status(500).send("Error al cargar el historial.");
-    }
-
+  try {
+    const rows = db.prepare(query).all(...params);
     res.render('historico', {
       lecturas: rows,
       filtros: { fecha, sensor_id }
     });
-  });
+  } catch (err) {
+    console.error("❌ Error al cargar histórico:", err.message);
+    res.status(500).send("Error al cargar el historial.");
+  }
 });
-
 
 // Iniciar servidor
 app.listen(PORT, () => {
