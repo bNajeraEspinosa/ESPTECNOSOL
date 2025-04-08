@@ -3,4 +3,6 @@ db/*.db
 *.zip
 .DS_Store
 .env
+*.sqlite
+*.db
 
