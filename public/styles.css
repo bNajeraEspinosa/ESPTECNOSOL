@@ -1,0 +1,87 @@
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 2rem;
+    background-color: #f4f4f4;
+  }
+  
+  h1 {
+    color: #333;
+  }
+  
+  .export-btn {
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #0074D9;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+  }
+  
+  th, td {
+    padding: 8px;
+    border: 1px solid #ccc;
+    text-align: center;
+  }
+  
+  /*histórico*/
+
+  .contenedor {
+    max-width: 900px;
+    margin: auto;
+    padding: 1rem;
+  }
+  
+  form.filtros {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+  }
+  
+  form.filtros input, form.filtros button {
+    padding: 6px 10px;
+    font-size: 1rem;
+  }
+  
+  .tabla-historico {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  .tabla-historico th, .tabla-historico td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .tabla-historico th {
+    background-color: #eee;
+  }
+
+  .export-btn {
+    display: inline-block;
+    background-color: #00BFFF;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    margin-bottom: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s;
+  }
+  
+  .export-btn:hover {
+    background-color: #0094cc;
+  }
+  

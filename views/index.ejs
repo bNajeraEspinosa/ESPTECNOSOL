@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/js/main.js" defer></script>
+  <script src="/js/nav.js" defer></script>
+</head>
+<body>
+  <div class="contenedor">
+    <h1>📈 Lecturas Recientes</h1>
+
+    <a href="/export" class="export-btn">⬇ Exportar a CSV</a>
+
+    <table class="tabla-historico">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Sensor</th>
+          <th>Humedad</th>
+          <th>Temp</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-lecturas">
+        <% lecturas.forEach(l => { %>
+          <tr>
+            <td><%= l.id %></td>
+            <td><%= l.sensor_id %></td>
+            <td><%= l.humedad %></td>
+            <td><%= l.temp %></td>
+            <td><%= l.fecha %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

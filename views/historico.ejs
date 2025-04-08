@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Histórico</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/js/nav.js" defer></script>
+</head>
+<body>
+  <div class="contenedor">
+    <h1>📚 Histórico de Lecturas</h1>
+
+    <form method="GET" action="/historico" class="filtros">
+      <label for="fecha">📅 Fecha:</label>
+      <input type="date" name="fecha" id="fecha" value="<%= filtros.fecha || '' %>">
+
+      <label for="sensor_id">🔢 Sensor ID:</label>
+      <input type="number" name="sensor_id" id="sensor_id" value="<%= filtros.sensor_id || '' %>">
+
+      <button type="submit">🔍 Buscar</button>
+      <a href="/historico">🧹 Limpiar</a>
+     
+    </form>
+
+    <% if (lecturas.length > 0) { %>
+      <table class="tabla-historico">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Sensor</th>
+            <th>Humedad</th>
+            <th>Temperatura</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% lecturas.forEach(l => { %>
+            <tr>
+              <td><%= l.id %></td>
+              <td><%= l.sensor_id %></td>
+              <td><%= l.humedad %></td>
+              <td><%= l.temp %></td>
+              <td><%= l.fecha %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p style="text-align: center; margin-top: 2rem;">🔎 No se encontraron resultados.</p>
+    <% } %>
+  </div>
+  <center><a href="/export" class="export-btn">⬇ Descargar CSV completo</a></center>
+
+</body>
+</html>
